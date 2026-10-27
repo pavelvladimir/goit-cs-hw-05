@@ -1,0 +1,4 @@
+Python makes data processing clear. Python supports asynchronous file processing.
+Data becomes useful when data is understood. Files contain data; words contain meaning.
+MapReduce counts words. MapReduce groups words. Python processes words.
+Асинхронність допомагає обробляти файли. Файли містять дані, дані мають значення.

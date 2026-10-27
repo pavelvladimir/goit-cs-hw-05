@@ -1,0 +1,66 @@
+{
+  "started_at": "2026-10-27T04:51:00.529906+00:00",
+  "started_at_prague": "2026-10-27T05:51:00.529906+01:00",
+  "uv_lock_sha256": "1459541272a4f1533dba985d51f364e38603b81410068f50aefface559dc1b43",
+  "pyproject_sha256": "48172c6957bfaee46f33ed37d5bcc2f283359f15b3853635efaa5ebab4089f08",
+  "environment": {
+    "python": "3.14.6 (main, Jun 10 2026, 10:03:53) [Clang 21.0.0 (clang-2100.0.123.102)]",
+    "platform": "macOS-26.5.2-arm64-arm-64bit-Mach-O"
+  },
+  "service": "pypi",
+  "scope": "All dependency groups exported from uv.lock; markers evaluated on this macOS arm64/Python environment.",
+  "path_representation": "Command paths are relative to the repository root; original command arguments used absolute paths.",
+  "commands": [
+    {
+      "argv": [
+        "make",
+        "audit"
+      ],
+      "started_at": "2026-10-27T04:51:00.547795+00:00",
+      "finished_at": "2026-10-27T04:51:03.690935+00:00",
+      "exit_code": 0,
+      "log": "make-audit.log"
+    },
+    {
+      "argv": [
+        "uv",
+        "run",
+        "--locked",
+        "pip-audit",
+        "--cache-dir",
+        ".cache/pip-audit/20261027T045100Z-f2mgsfbg",
+        "--require-hashes",
+        "--disable-pip",
+        "--strict",
+        "--progress-spinner",
+        "off",
+        "--vulnerability-service",
+        "pypi",
+        "--format",
+        "json",
+        "--output",
+        "artifacts/20261027T045100Z-f2mgsfbg/pip-audit.json",
+        "-r",
+        "artifacts/20261027T045100Z-f2mgsfbg/requirements.txt"
+      ],
+      "started_at": "2026-10-27T04:51:04.009525+00:00",
+      "finished_at": "2026-10-27T04:51:08.346893+00:00",
+      "exit_code": 0,
+      "log": "json-audit.log"
+    }
+  ],
+  "make_audit_exit_code": 0,
+  "requirements_sha256": "03f2c1724b24168f2bbf91d15e0cea068f1d15a5854108175066563e613c54a0",
+  "pip_audit_version": "pip-audit 2.10.1",
+  "json_audit_exit_code": 0,
+  "audited_dependencies": 66,
+  "skipped_dependencies": [],
+  "affected_dependencies": 0,
+  "vulnerability_entries": 0,
+  "unique_vulnerability_ids": [],
+  "pip_audit_json_sha256": "a1bbcda897bf372df2242005b5d637e05412605414097aa16df8fb7e82a6440d",
+  "lockfile_unchanged": true,
+  "finished_at": "2026-10-27T04:51:08.347293+00:00",
+  "finished_at_prague": "2026-10-27T05:51:08.347293+01:00",
+  "status": "passed"
+}

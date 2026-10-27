@@ -1,0 +1,1 @@
+First report: this file must be preserved when another report.txt is copied.

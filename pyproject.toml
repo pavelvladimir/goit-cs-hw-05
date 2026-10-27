@@ -1,0 +1,61 @@
+[project]
+name = "goit-cs-hw-05"
+version = "0.1.0"
+description = "Asynchronous file sorting and threaded MapReduce word analysis"
+readme = "README.md"
+requires-python = ">=3.14,<3.15"
+dependencies = [
+    "anyio>=4.11,<5",
+    "jsonschema>=4.23,<5",
+    "matplotlib>=3.10,<4",
+]
+
+[dependency-groups]
+dev = [
+    "coverage[toml]>=7.10,<8",
+    "mypy>=1.18,<3",
+    "pip-audit>=2.10.1,<3",
+    "pytest>=8.4,<10",
+    "pymarkdownlnt>=0.9,<1",
+    "ruff>=0.14,<1",
+    "types-jsonschema>=4.23,<5",
+]
+
+[tool.uv]
+package = false
+prerelease = "disallow"
+
+[tool.ruff]
+target-version = "py314"
+line-length = 88
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B"]
+
+[tool.mypy]
+python_version = "3.14"
+files = ["async_sorter.py", "mapreduce_words.py", "common.py", "report_validation.py", "scripts", "tests"]
+strict = true
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["."]
+addopts = "-ra --strict-markers --strict-config"
+filterwarnings = ["error"]
+
+[tool.coverage.run]
+branch = true
+source = ["async_sorter", "mapreduce_words", "common", "report_validation"]
+relative_files = true
+
+[tool.coverage.report]
+show_missing = true
+precision = 2
+fail_under = 90
+exclude_also = ['if __name__ == "__main__":']
+
+[tool.pymarkdown]
+plugins.md013.line_length = 100
+plugins.md013.code_block_line_length = 100
+plugins.md013.heading_line_length = 100
+plugins.md013.table_line_length = 150
