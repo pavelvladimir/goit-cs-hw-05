@@ -10,6 +10,7 @@ from async_sorter import SortStats, copy_file, read_folder, sort_files
 
 
 def test_recursive_binary_copy_and_source_preservation(tmp_path: Path) -> None:
+    """Sort nested and unusual filenames while preserving every source byte."""
     source, output = tmp_path / "джерело з пробілами", tmp_path / "output"
     files = {
         "report.txt": b"first",
@@ -51,6 +52,7 @@ def test_recursive_binary_copy_and_source_preservation(tmp_path: Path) -> None:
 
 
 def test_concurrent_collisions_and_repeat_preserve_all_contents(tmp_path: Path) -> None:
+    """Keep every copy across concurrent name collisions and repeated runs."""
     source, output = tmp_path / "source", tmp_path / "output"
     for number in range(24):
         folder = source / str(number)
@@ -70,6 +72,7 @@ def test_concurrent_collisions_and_repeat_preserve_all_contents(tmp_path: Path) 
 
 @pytest.mark.parametrize("relation", ["same", "inside", "outside", "alias"])
 def test_overlapping_paths_are_rejected(tmp_path: Path, relation: str) -> None:
+    """Reject equal, nested, and symlink-aliased source and output paths."""
     source = tmp_path / "source"
     source.mkdir()
     outputs = {"same": source, "inside": source / "out", "outside": tmp_path}
@@ -82,6 +85,7 @@ def test_overlapping_paths_are_rejected(tmp_path: Path, relation: str) -> None:
 
 
 def test_invalid_source_and_worker_count(tmp_path: Path) -> None:
+    """Reject missing or nondirectory sources and nonpositive worker counts."""
     source = tmp_path / "source"
     output = AsyncPath(tmp_path / "output")
     with pytest.raises(FileNotFoundError):
@@ -94,6 +98,7 @@ def test_invalid_source_and_worker_count(tmp_path: Path) -> None:
 
 
 def test_empty_source(tmp_path: Path) -> None:
+    """Return zero statistics for an empty source directory."""
     source = tmp_path / "source"
     source.mkdir()
     assert (
@@ -103,6 +108,7 @@ def test_empty_source(tmp_path: Path) -> None:
 
 
 def test_links_skipped_and_destination_link_rejected(tmp_path: Path) -> None:
+    """Skip source links and prevent writes through an extension-directory link."""
     source, output, outside = (tmp_path / name for name in ("source", "out", "outside"))
     source.mkdir()
     output.mkdir()
@@ -120,6 +126,7 @@ def test_links_skipped_and_destination_link_rejected(tmp_path: Path) -> None:
 def test_copy_error_does_not_stop_other_files(
     tmp_path: Path, caplog: pytest.LogCaptureFixture
 ) -> None:
+    """Log one blocked copy while allowing an independent file to finish."""
     source, output = tmp_path / "source", tmp_path / "output"
     source.mkdir()
     output.mkdir()
@@ -135,7 +142,10 @@ def test_copy_error_does_not_stop_other_files(
 def test_read_errors_are_logged(
     tmp_path: Path, caplog: pytest.LogCaptureFixture
 ) -> None:
+    """Count and log both directory traversal and entry inspection failures."""
+
     async def run() -> SortStats:
+        """Exercise missing-directory and denied-entry errors in one event loop."""
         stats = SortStats()
         queue: asyncio.Queue[AsyncPath | None] = asyncio.Queue()
         await read_folder(AsyncPath(tmp_path / "missing"), queue, stats)
@@ -153,6 +163,7 @@ def test_read_errors_are_logged(
 def test_partial_copy_removed_on_error_or_cancellation(
     tmp_path: Path, cancel: bool
 ) -> None:
+    """Remove incomplete copies after write failure or task cancellation."""
     source = tmp_path / "file.txt"
     source.write_text("original")
     output = tmp_path / "out"
@@ -167,6 +178,7 @@ def test_partial_copy_removed_on_error_or_cancellation(
 def test_cleanup_failure_is_logged(
     tmp_path: Path, caplog: pytest.LogCaptureFixture
 ) -> None:
+    """Log cleanup failure while preserving the original write exception."""
     source = tmp_path / "file.txt"
     source.write_text("original")
     with (
@@ -183,6 +195,7 @@ def test_cleanup_failure_is_logged(
 def test_workers_are_concurrent_and_bounded(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
+    """Gate real copies to verify overlap without exceeding two workers."""
     source = tmp_path / "source"
     source.mkdir()
     for number in range(12):
@@ -190,6 +203,7 @@ def test_workers_are_concurrent_and_bounded(
     original = copy_file
 
     async def run() -> None:
+        """Coordinate worker overlap and check completion within time limits."""
         active = 0
         peak = 0
         entered, release = asyncio.Event(), asyncio.Event()
@@ -197,6 +211,7 @@ def test_workers_are_concurrent_and_bounded(
         async def gated_copy(
             path: AsyncPath, output: AsyncPath, stats: SortStats | None = None
         ) -> AsyncPath:
+            """Track active copies and pause them until the test releases the gate."""
             nonlocal active, peak
             active += 1
             peak = max(peak, active)
@@ -226,12 +241,16 @@ def test_workers_are_concurrent_and_bounded(
 def test_io_error_during_cancellation_does_not_keep_worker_alive(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch, caplog: pytest.LogCaptureFixture
 ) -> None:
+    """Require a cancelled worker to exit even if its active transfer fails."""
+
     async def run() -> None:
+        """Cancel an active worker and verify its queue item is acknowledged."""
         entered = asyncio.Event()
 
         async def failing_transfer(
             source: AsyncPath, output: AsyncPath, stats: SortStats, stop: asyncio.Event
         ) -> AsyncPath:
+            """Raise an I/O error only after the copy receives its stop signal."""
             entered.set()
             await stop.wait()
             raise OSError("disk failed during shutdown")
@@ -257,6 +276,7 @@ def test_io_error_during_cancellation_does_not_keep_worker_alive(
 
 @pytest.mark.parametrize("nested", [False, True])
 def test_case_only_overlapping_paths_are_rejected(tmp_path: Path, nested: bool) -> None:
+    """Reject case-only source aliases consistently across filesystems."""
     source = tmp_path / "source"
     source.mkdir()
     (source / "original.txt").write_text("original")

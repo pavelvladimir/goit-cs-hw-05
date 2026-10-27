@@ -17,6 +17,7 @@ ROOT = Path(__file__).resolve().parents[1]
 
 @pytest.fixture(autouse=True)
 def require_unprivileged_posix() -> None:
+    """Require real permission enforcement; fail rather than skip in Rocky."""
     if os.name != "posix" or os.geteuid() == 0:
         if os.environ.get("HW05_ROCKY_CHECK") == "1":
             pytest.fail("Rocky must exercise permissions as a non-root user.")
@@ -25,6 +26,7 @@ def require_unprivileged_posix() -> None:
 
 @contextmanager
 def permissions(path: Path, mode: int) -> Iterator[None]:
+    """Temporarily change permission bits and always restore them."""
     previous = path.stat().st_mode & 0o7777
     path.chmod(mode)
     try:
@@ -34,6 +36,7 @@ def permissions(path: Path, mode: int) -> Iterator[None]:
 
 
 def cli(script: str, *arguments: str | Path) -> subprocess.CompletedProcess[str]:
+    """Run a real CLI with captured output and a bounded timeout."""
     return subprocess.run(
         [sys.executable, str(ROOT / script), *map(str, arguments)],
         cwd=ROOT,
@@ -44,6 +47,7 @@ def cli(script: str, *arguments: str | Path) -> subprocess.CompletedProcess[str]
 
 
 def assert_failed(result: subprocess.CompletedProcess[str], report: Path) -> None:
+    """Check that a permission failure reaches stderr and a valid report."""
     assert result.returncode == 1, (result.stdout, result.stderr)
     assert "PermissionError" in result.stderr
     data = json.loads(report.read_text())
@@ -58,6 +62,7 @@ def test_unreadable_source_keeps_data_and_copies_accessible_files(
     tmp_path: Path,
     blocked_kind: str,
 ) -> None:
+    """Continue past denied inputs without modifying the source files."""
     source, output = tmp_path / "source", tmp_path / "out"
     source.mkdir()
     good = source / "good.txt"
@@ -87,6 +92,7 @@ def test_unwritable_destination_preserves_existing_files(
     tmp_path: Path,
     blocked_kind: str,
 ) -> None:
+    """Preserve old copies and report denied writes per extension folder."""
     source, output = tmp_path / "source", tmp_path / "out"
     source.mkdir()
     (source / "same.txt").write_bytes(b"new")
@@ -117,6 +123,7 @@ def test_unwritable_destination_preserves_existing_files(
 
 
 def command_arguments(script: str, tmp_path: Path, http_url: str) -> list[str]:
+    """Prepare valid input and output arguments for either homework CLI."""
     if script == "async_sorter.py":
         source = tmp_path / "source"
         source.mkdir()
@@ -131,6 +138,7 @@ def test_unwritable_report_directory_preserves_previous_report(
     http_url: str,
     script: str,
 ) -> None:
+    """Keep the previous report when new results cannot be published."""
     folder = tmp_path / "reports"
     folder.mkdir()
     report = folder / "run.json"
@@ -158,6 +166,7 @@ def test_unwritable_chart_keeps_previous_image_and_reports_analysis(
     tmp_path: Path,
     http_url: str,
 ) -> None:
+    """Retain the old chart and completed counts when chart writing fails."""
     folder = tmp_path / "charts"
     folder.mkdir()
     chart, report = folder / "chart.png", tmp_path / "run.json"
@@ -183,6 +192,7 @@ def test_unwritable_log_stops_before_processing(
     script: str,
     blocked_kind: str,
 ) -> None:
+    """Report denied log access before copying or downloading anything."""
     folder = tmp_path / "logs"
     folder.mkdir()
     log = folder / "run.log"
@@ -215,6 +225,7 @@ def test_report_publication_error_cleans_real_temporary_file(
     http_url: str,
     script: str,
 ) -> None:
+    """Remove a report temporary file when a directory blocks publication."""
     report = tmp_path / "report.json"
     report.mkdir()
     sentinel = report / "keep.txt"

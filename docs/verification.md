@@ -7,11 +7,12 @@ Rocky Linux 10.2 ARM64. Обидва середовища використову
 
 | Перевірка | Результат |
 | --- | --- |
-| `make check` на macOS | 170 тестів, без помилок і пропусків |
-| `make check-rocky` | 170 тестів, без помилок і пропусків; demo пройшло |
+| `make check` на macOS | 175 тестів, без помилок і пропусків |
+| `make check-rocky` | 175 тестів, без помилок і пропусків; demo пройшло |
 | Покриття з урахуванням гілок | 98,86% на обох платформах; поріг 90% |
 | Ruff, форматування, Bash і Markdown | Без помилок |
 | Strict mypy | Без помилок у 20 Python-файлах |
+| Docstrings функцій, включно з тестами | 154 із 154 (100%), перевірено через AST |
 | `uv lock --check --offline`, `uv pip check` | Lockfile узгоджений, 66 пакетів сумісні |
 | `make demo` | 6 копій, 329 байтів, 1 колізія; 42 слова, 29 унікальних |
 | `make validate-reports` | Обидва demo-звіти відповідають схемі |
@@ -63,7 +64,7 @@ SHA-256 перевіреного `uv.lock`:
 | Docker | Engine 29.8.2, Desktop 4.95.0 |
 | Інструменти | Python 3.14.6, uv 0.13.0, Make 4.4.1 |
 | Запуск | UID 501, GID 20; зовнішня мережа вимкнена |
-| Тести | 170 пройшли за 17,61 с |
+| Тести | 175 пройшли за 17,46 с |
 
 Усі 13 тестів прав доступу пройшли також на macOS. У Rocky файлові операції
 виконувалися в Linux tmpfs. AMD64, окремий сервер Rocky, інші файлові системи
@@ -73,7 +74,7 @@ SHA-256 перевіреного `uv.lock`:
 
 [Benchmark](benchmark.md) містить JSON, CSV і графік запуску до додавання
 JSON Schema. Його SHA-256 описують стан коду на час вимірювання, до змін
-`common.py`, `uv.lock` і поля шляху в benchmark.
+`common.py`, `uv.lock` і `scripts/benchmark.py`.
 
 [Графік Gutenberg](images/top_words.png) отримано того самого дня до уточнення
 Unicode-токенізації: 127 870 слів, 6 824 унікальні. Це приклад попереднього
@@ -83,9 +84,10 @@ Unicode-токенізації: 127 870 слів, 6 824 унікальні. Це
 
 | Шлях | Зміст |
 | --- | --- |
-| `artifacts/coderabbit-terminal-check.log` | Перевірка macOS після виправлення виводу benchmark |
+| `artifacts/docstrings-cleanup-check.log` | Остання повна перевірка macOS |
+| `artifacts/docstrings-coverage.log` | Покриття функцій docstrings за AST |
 | `artifacts/20261027T050540Z-docs-review-b85_2jmu/demo.log` | Demo та валідація звітів на macOS |
-| `artifacts/rocky/20261027T053413Z-wpd2Ec/` | Логи, JUnit, coverage і demo в Rocky |
+| `artifacts/rocky/20261027T054555Z-Vh6Yg2/` | Логи, JUnit, coverage і demo в Rocky |
 | `artifacts/20261027T045100Z-f2mgsfbg/` | Аудит, копія lockfile, requirements і журнали |
 | `artifacts/benchmarks/20261027T034044-nhsqrfe_/` | Повний запуск benchmark |
 | `htmlcov/index.html`, `coverage.xml` | Покриття останнього локального прогону |

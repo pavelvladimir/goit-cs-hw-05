@@ -17,17 +17,20 @@ ROOT = Path(__file__).resolve().parents[1]
 
 @pytest.mark.parametrize("value", ["0", "-1", "abc", "1.5"])
 def test_bad_integer(value: str) -> None:
+    """Reject nonpositive and noninteger worker arguments."""
     with pytest.raises(argparse.ArgumentTypeError):
         positive_int(value)
 
 
 @pytest.mark.parametrize("value", ["0", "-1", "abc", "nan", "inf", "-inf"])
 def test_bad_float(value: str) -> None:
+    """Reject invalid, nonpositive, and nonfinite timeout arguments."""
     with pytest.raises(argparse.ArgumentTypeError):
         positive_float(value)
 
 
 def test_valid_numbers() -> None:
+    """Accept positive integers and fractional timeouts."""
     assert positive_int("3") == 3
     assert positive_float("0.25") == 0.25
 
@@ -36,6 +39,7 @@ def test_valid_numbers() -> None:
 def test_logging_to_file_and_stderr(
     tmp_path: Path, capsys: pytest.CaptureFixture[str], existing: bool
 ) -> None:
+    """Log Unicode errors to both destinations without truncating logs."""
     logger = logging.getLogger()
     previous_handlers, previous_level = logger.handlers[:], logger.level
     logfile = tmp_path / "logs/errors.log"
@@ -57,6 +61,7 @@ def test_logging_to_file_and_stderr(
 
 
 def test_log_must_be_a_regular_file(tmp_path: Path) -> None:
+    """Reject a directory as the log destination."""
     with pytest.raises(ValueError, match="звичайним файлом"):
         configure_logging(tmp_path)
 
@@ -64,6 +69,7 @@ def test_log_must_be_a_regular_file(tmp_path: Path) -> None:
 def test_sorter_main_statuses(
     tmp_path: Path, capsys: pytest.CaptureFixture[str]
 ) -> None:
+    """Check sorter exit codes for success, errors, and interruption."""
     source, output = tmp_path / "src", tmp_path / "out"
     source.mkdir()
     (source / "file.txt").write_text("text")
@@ -82,6 +88,7 @@ def test_sorter_main_statuses(
 def test_word_main_statuses(
     http_url: str, tmp_path: Path, capsys: pytest.CaptureFixture[str]
 ) -> None:
+    """Check word CLI output and download, chart, and interrupt failures."""
     output = tmp_path / "top.png"
     with patch.object(mapreduce_words, "configure_logging"):
         assert (
@@ -114,6 +121,7 @@ def test_word_main_statuses(
 
 @pytest.mark.parametrize("script", ["async_sorter.py", "mapreduce_words.py"])
 def test_real_cli_help_and_validation(script: str) -> None:
+    """Verify help and argument rejection in fresh CLI processes."""
     help_result = subprocess.run(
         [sys.executable, str(ROOT / script), "--help"],
         capture_output=True,
@@ -132,6 +140,7 @@ def test_real_cli_help_and_validation(script: str) -> None:
 
 
 def test_real_cli_end_to_end(tmp_path: Path, http_url: str) -> None:
+    """Run both standalone scripts and verify their binary outputs."""
     source, output = tmp_path / "source", tmp_path / "sorted"
     source.mkdir()
     (source / "data.txt").write_bytes(b"\x00\xffcontent")

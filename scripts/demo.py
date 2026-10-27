@@ -16,6 +16,7 @@ class QuietHandler(SimpleHTTPRequestHandler):
     """Keep demo output focused on the homework results."""
 
     def log_message(self, format: str, *args: object) -> None:
+        """Suppress HTTP access logs so the demo shows only task results."""
         pass
 
 

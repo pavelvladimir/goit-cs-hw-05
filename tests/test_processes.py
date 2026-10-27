@@ -23,6 +23,7 @@ pytestmark = pytest.mark.skipif(
 def probe(
     mode: str, source: Path, output: Path, report: Path
 ) -> Iterator[subprocess.Popen[str]]:
+    """Start a gated sorter process and always reap it after the test."""
     process = subprocess.Popen(
         [
             sys.executable,
@@ -51,6 +52,7 @@ def probe(
 
 
 def expect_line(process: subprocess.Popen[str], expected: str) -> None:
+    """Require a child handshake within a bounded wait."""
     assert process.stdout is not None
     with selectors.DefaultSelector() as selector:
         selector.register(process.stdout, selectors.EVENT_READ)
@@ -59,6 +61,7 @@ def expect_line(process: subprocess.Popen[str], expected: str) -> None:
 
 
 def release(process: subprocess.Popen[str]) -> None:
+    """Unblock the child through its standard input pipe."""
     assert process.stdin is not None
     process.stdin.write("continue\n")
     process.stdin.flush()
@@ -68,6 +71,7 @@ def release(process: subprocess.Popen[str]) -> None:
 def test_real_sigint_waits_for_io_cleans_partial_and_reports(
     tmp_path: Path, fail_write: bool
 ) -> None:
+    """Interrupt real copying and verify cleanup, source data, and reporting."""
     source, output, report = (
         tmp_path / "source",
         tmp_path / "output",
@@ -104,6 +108,7 @@ def test_real_sigint_waits_for_io_cleans_partial_and_reports(
 def test_two_real_processes_preserve_existing_and_colliding_files(
     tmp_path: Path,
 ) -> None:
+    """Race two publications without losing existing or newly copied bytes."""
     first, second, output = (tmp_path / name for name in ("first", "second", "out"))
     first.mkdir()
     second.mkdir()
@@ -142,6 +147,7 @@ def test_two_real_processes_preserve_existing_and_colliding_files(
 
 
 def test_sigint_during_publication_accounts_for_completed_file(tmp_path: Path) -> None:
+    """Count a published file even when SIGINT arrives before accounting."""
     source = tmp_path / "src"
     output, report = tmp_path / "out", tmp_path / "run.json"
     source.mkdir()

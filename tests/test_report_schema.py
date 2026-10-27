@@ -20,6 +20,7 @@ ROOT = Path(__file__).resolve().parents[1]
 
 
 def test_schema_is_valid_and_uses_only_internal_references() -> None:
+    """Validate the bundled schema without any external references."""
     schema = json.loads(SCHEMA_PATH.read_text())
     Draft202012Validator.check_schema(schema)
     pending = [schema]
@@ -44,6 +45,7 @@ def test_all_outcomes_are_valid(
     valid_sorter_report: dict[str, Any],
     valid_word_report: dict[str, Any],
 ) -> None:
+    """Accept valid success, failure, and cancellation reports for both tasks."""
     report = valid_sorter_report if task == "async_sorter" else valid_word_report
     report.update(status=status, exit_code=code)
     report["statistics"]["errors"] = int(status == "failed")
@@ -59,6 +61,7 @@ def test_download_metadata_can_be_absent_before_download(
     valid_word_report: dict[str, Any],
     status: str,
 ) -> None:
+    """Allow failure or cancellation before download metadata is available."""
     report = valid_word_report
     report.update(
         status=status,
@@ -84,6 +87,7 @@ def test_download_metadata_can_be_absent_before_download(
 def test_missing_required_field_is_rejected(
     valid_sorter_report: dict[str, Any], field: str
 ) -> None:
+    """Reject sorter reports missing a required contract field."""
     del valid_sorter_report[field]
     with pytest.raises(ReportValidationError):
         validate_report(valid_sorter_report)
@@ -122,6 +126,7 @@ def test_invalid_common_and_sorter_fields_are_rejected(
     keys: tuple[str, ...],
     value: object,
 ) -> None:
+    """Reject invalid types, ranges, dates, and unexpected sorter fields."""
     target = valid_sorter_report
     for key in keys[:-1]:
         target = target[key]
@@ -159,6 +164,7 @@ def test_invalid_word_fields_are_rejected(
     keys: tuple[str, ...],
     value: object,
 ) -> None:
+    """Reject malformed download metadata, counts, and word parameters."""
     target = valid_word_report
     for key in keys[:-1]:
         target = target[key]
@@ -170,6 +176,7 @@ def test_invalid_word_fields_are_rejected(
 def test_partial_download_metadata_is_rejected_on_failure(
     valid_word_report: dict[str, Any],
 ) -> None:
+    """Require complete download metadata whenever any of it is supplied."""
     report = valid_word_report
     report.update(status="failed", exit_code=1, error="download failed")
     report["statistics"]["errors"] = 1
@@ -188,6 +195,7 @@ def test_failed_and_cancelled_codes_match_status(
     code: int,
     errors: int,
 ) -> None:
+    """Reject inconsistent status, exit code, and error counts."""
     valid_sorter_report.update(status=status, exit_code=code)
     valid_sorter_report["statistics"]["errors"] = errors
     with pytest.raises(ReportValidationError):
@@ -201,6 +209,7 @@ def test_invalid_new_report_never_overwrites_previous_file(
     code: int,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
+    """Validate before writing so malformed reports preserve the old file."""
     output = tmp_path / "report.json"
     original = json.dumps(valid_sorter_report).encode()
     output.write_bytes(original)
@@ -216,6 +225,7 @@ def test_invalid_new_report_never_overwrites_previous_file(
 
 
 def test_non_json_objects_are_rejected(valid_sorter_report: dict[str, Any]) -> None:
+    """Reject Python values that cannot be represented in JSON."""
     valid_sorter_report["source"] = object()
     with pytest.raises(ReportValidationError, match="JSON"):
         validate_report(valid_sorter_report)
@@ -224,6 +234,7 @@ def test_non_json_objects_are_rejected(valid_sorter_report: dict[str, Any]) -> N
 def test_invalid_bundled_schema_is_reported(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
+    """Surface schema errors and clear the validator cache afterward."""
     broken = tmp_path / "schema.json"
     broken.write_text('{"type": "not-a-type"}')
     monkeypatch.setattr(report_validation, "SCHEMA_PATH", broken)
@@ -236,6 +247,7 @@ def test_invalid_bundled_schema_is_reported(
 
 
 def test_partial_sort_failure_is_schema_valid(tmp_path: Path) -> None:
+    """Accept partial copy counts with per-file errors recorded in the log."""
     source, output, report = (
         tmp_path / "src",
         tmp_path / "out",
@@ -263,6 +275,7 @@ def test_word_report_valid_after_analysis_but_before_chart(
     http_url: str,
     interrupt: bool,
 ) -> None:
+    """Retain valid counts and hashes when charting fails or is interrupted."""
     output, report = tmp_path / "plot.png", tmp_path / "run.json"
     error = KeyboardInterrupt() if interrupt else OSError("disk full")
     with (
@@ -284,6 +297,7 @@ def test_validator_cli_success_and_errors(
     valid_sorter_report: dict[str, Any],
     capsys: pytest.CaptureFixture[str],
 ) -> None:
+    """Validate every input file, report each failure, and leave files intact."""
     valid = tmp_path / "valid.json"
     valid.write_text(json.dumps(valid_sorter_report))
     original = valid.read_bytes()

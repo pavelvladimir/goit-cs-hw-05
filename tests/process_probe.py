@@ -12,6 +12,7 @@ import async_sorter
 
 
 async def release_gate() -> None:
+    """Announce readiness and wait for the parent to release this step."""
     print("READY", flush=True)
     await asyncio.to_thread(sys.stdin.readline)
 
@@ -19,11 +20,13 @@ async def release_gate() -> None:
 def install_interrupt_gate(
     *, pause_write: bool = True, fail_write: bool = False
 ) -> None:
+    """Pause a write and expose cancellation to the parent process."""
     original_write = AsyncFile.write
     original_copy = async_sorter._copy_file
     paused = False
 
     async def write(self: AsyncFile[bytes], data: bytes) -> int:
+        """Pause after the first write and optionally fail after release."""
         nonlocal paused
         result = await original_write(self, data)
         if not paused:
@@ -39,7 +42,10 @@ def install_interrupt_gate(
         stats: async_sorter.SortStats,
         stop: asyncio.Event,
     ) -> AsyncPath:
+        """Run the real copy with a watcher for its cancellation signal."""
+
         async def notify() -> None:
+            """Notify the parent when the copy receives its stop signal."""
             await stop.wait()
             print("STOP", flush=True)
 
@@ -57,10 +63,12 @@ def install_interrupt_gate(
 
 
 def install_publication_gate(*, after: bool = False) -> None:
+    """Pause once before or after publishing a copy via hard link."""
     original = AsyncPath.hardlink_to
     paused = False
 
     async def link(self: AsyncPath, target: AsyncPath) -> None:
+        """Gate the first hard link while preserving its real operation."""
         nonlocal paused
         if after:
             await original(self, target)

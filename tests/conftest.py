@@ -26,6 +26,7 @@ def local_http_only(monkeypatch: pytest.MonkeyPatch) -> None:
     import mapreduce_words
 
     def open_local(request: Request, *, timeout: float) -> HTTPResponse:
+        """Allow initial HTTP requests only to the local test server."""
         assert urlsplit(request.full_url).hostname in {"127.0.0.1", "localhost"}
         return cast(HTTPResponse, urlopen(request, timeout=timeout))
 
@@ -33,7 +34,10 @@ def local_http_only(monkeypatch: pytest.MonkeyPatch) -> None:
 
 
 class TextHandler(BaseHTTPRequestHandler):
+    """Serve fixed text, redirects, and malformed responses for tests."""
+
     def do_GET(self) -> None:
+        """Return the fixture response selected by the request path."""
         if self.path == "/redirect":
             self.send_response(302)
             self.send_header("Location", "/text")
@@ -61,11 +65,13 @@ class TextHandler(BaseHTTPRequestHandler):
         self.wfile.write(body)
 
     def log_message(self, format: str, *args: object) -> None:
+        """Suppress access logs during HTTP tests."""
         pass
 
 
 @pytest.fixture(scope="session")
 def http_url() -> Iterator[str]:
+    """Yield a loopback server URL and stop its thread after the tests."""
     with ThreadingHTTPServer(("127.0.0.1", 0), TextHandler) as server:
         thread = Thread(target=server.serve_forever, daemon=True)
         thread.start()
@@ -102,6 +108,7 @@ def valid_sorter_report() -> dict[str, Any]:
 
 @pytest.fixture
 def valid_word_report(valid_sorter_report: dict[str, Any]) -> dict[str, Any]:
+    """Build a complete word report with matching hashes and counts."""
     report = deepcopy(valid_sorter_report)
     body = b"hello hello"
     digest = hashlib.sha256(body).hexdigest()

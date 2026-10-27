@@ -17,6 +17,7 @@ from mapreduce_words import (
 
 
 def test_unicode_normalization() -> None:
+    """Normalize case, composed accents, and apostrophe variants."""
     text = (
         "Hello, HELLO! П’ять пʼять П'ЯТЬ. Café cafe\u0301 "
         "STRASSE Straße; 123 _ -- data-driven."
@@ -51,6 +52,7 @@ def test_unicode_normalization() -> None:
 def test_unicode_numbers_marks_and_apostrophe_boundaries(
     text: str, expected: list[str]
 ) -> None:
+    """Preserve letter marks while splitting numbers and invalid apostrophes."""
     assert list(tokenize(text)) == expected
 
 
@@ -58,12 +60,14 @@ def test_unicode_numbers_marks_and_apostrophe_boundaries(
     ("workers", "chunk_size"), [(1, 1), (2, 17), (4, 2000), (8, 99999)]
 )
 def test_mapreduce_matches_independent_counts(workers: int, chunk_size: int) -> None:
+    """Match known counts across worker counts and chunk sizes."""
     words = ["python", "дані", "слово", "python", "дані", "mapreduce"] * 750
     assert map_reduce(" ".join(words), workers, chunk_size) == Counter(words)
 
 
 @pytest.mark.parametrize("text", ["", "123... — !!!"])
 def test_empty_text(text: str) -> None:
+    """Return no counts and reject charts when the text has no words."""
     assert map_reduce(text) == {}
     with pytest.raises(ValueError, match="не містить слів"):
         visualize_top_words({})
@@ -71,6 +75,7 @@ def test_empty_text(text: str) -> None:
 
 @pytest.mark.parametrize(("workers", "chunk_size"), [(0, 1), (1, 0), (-1, 10)])
 def test_bad_pool_settings(workers: int, chunk_size: int) -> None:
+    """Reject nonpositive worker counts and chunk sizes."""
     with pytest.raises(ValueError):
         map_reduce("text", workers, chunk_size)
 
@@ -78,6 +83,7 @@ def test_bad_pool_settings(workers: int, chunk_size: int) -> None:
 def test_map_and_reduce_really_use_multiple_threads(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
+    """Use barriers to prove both stages run in multiple worker threads."""
     mapper, reducer = mapreduce_words.map_chunk, mapreduce_words.reduce_function
     map_threads: set[int] = set()
     reduce_threads: set[int] = set()
@@ -88,12 +94,14 @@ def test_map_and_reduce_really_use_multiple_threads(
     lock = threading.Lock()
 
     def traced_map(chunk: tuple[str, ...]) -> dict[str, int]:
+        """Record mapper thread identities before synchronizing two workers."""
         with lock:
             map_threads.add(threading.get_ident())
         map_gate.wait()
         return mapper(chunk)
 
     def traced_reduce(item: tuple[str, list[int]]) -> tuple[str, int]:
+        """Record reducer thread identities before synchronizing two workers."""
         with lock:
             reduce_threads.add(threading.get_ident())
         reduce_gate.wait()
@@ -110,6 +118,7 @@ def test_map_and_reduce_really_use_multiple_threads(
 
 
 def test_chart_order_labels_and_png(tmp_path: Path) -> None:
+    """Verify descending bars, alphabetical ties, labels, and PNG output."""
     output = tmp_path / "charts/top.png"
     counts = {"beta": 2, "gamma": 1, "alpha": 2, "winner": 9}
     figure = visualize_top_words(counts, 3, output)
@@ -136,6 +145,7 @@ def test_chart_order_labels_and_png(tmp_path: Path) -> None:
 
 
 def test_show_closes_figure() -> None:
+    """Close the interactive figure after the mocked display returns."""
     import matplotlib.pyplot as plt
 
     with patch.object(plt, "show") as show:
@@ -145,6 +155,7 @@ def test_show_closes_figure() -> None:
 
 
 def test_http_download_charsets_redirects_and_limits(http_url: str) -> None:
+    """Exercise HTTP decoding, redirects, size boundaries, and failures."""
     assert download_text(f"{http_url}/text") == "Python python, дані! Дані — слова."
     assert download_text(f"{http_url}/redirect") == download_text(f"{http_url}/text")
     assert download_text(f"{http_url}/latin") == "café café"
@@ -160,6 +171,7 @@ def test_http_download_charsets_redirects_and_limits(http_url: str) -> None:
 
 
 def test_truncated_http_response_is_rejected(http_url: str) -> None:
+    """Reject a response shorter than its advertised Content-Length."""
     with pytest.raises(OSError, match="обірвалася"):
         download_text(f"{http_url}/truncated")
 
@@ -168,6 +180,7 @@ def test_truncated_http_response_is_rejected(http_url: str) -> None:
     "url", ["file:///etc/passwd", "ftp://example.org/file", "https:///missing", "text"]
 )
 def test_invalid_urls(url: str) -> None:
+    """Reject malformed URLs and schemes other than HTTP or HTTPS."""
     with pytest.raises(ValueError, match="URL"):
         download_text(url)
 
@@ -176,5 +189,6 @@ def test_invalid_urls(url: str) -> None:
     ("timeout", "limit"), [(0, 1), (float("inf"), 1), (float("nan"), 1), (1, 0)]
 )
 def test_download_limits(timeout: float, limit: int) -> None:
+    """Reject invalid limits before making any HTTP request."""
     with pytest.raises(ValueError):
         download_text("http://localhost/text", timeout=timeout, max_bytes=limit)

@@ -38,6 +38,8 @@ WORKERS = (1, 4, 8, 16)
 
 @dataclass(frozen=True)
 class Config:
+    """Set dataset sizes, repetitions, and seeds for reproducible runs."""
+
     small_files: int = 300
     small_bytes: int = 4096
     large_files: int = 3
@@ -50,6 +52,8 @@ class Config:
 
 @dataclass(frozen=True)
 class Trial:
+    """Record one timed run, including whether it is a warmup."""
+
     dataset: str
     method: str
     workers: int
@@ -61,6 +65,7 @@ class Trial:
 
 
 def digest(path: Path) -> str:
+    """Return the SHA-256 of a file without loading it all into memory."""
     with path.open("rb") as stream:
         return hashlib.file_digest(stream, "sha256").hexdigest()
 
@@ -116,6 +121,7 @@ def sequential_copy(source: Path, output: Path) -> None:
 def benchmark_files(
     source: Path, work: Path, dataset: str, config: Config, rng: random.Random
 ) -> tuple[list[Trial], dict[str, str]]:
+    """Time copy variants and verify file contents outside each timer."""
     expected = inventory(source, source=True)
     byte_count = sum(
         path.stat().st_size for path in source.rglob("*") if path.is_file()
@@ -164,6 +170,7 @@ def benchmark_files(
 
 
 def benchmark_words(text: str, config: Config, rng: random.Random) -> list[Trial]:
+    """Time counting variants and check every result against Counter."""
     expected = dict(Counter(tokenize(text)))
     trials: list[Trial] = []
     for repetition in range(config.warmups + config.repeats):
@@ -193,6 +200,7 @@ def benchmark_words(text: str, config: Config, rng: random.Random) -> list[Trial
 
 
 def summarize(trials: list[Trial]) -> list[dict[str, str | int | float]]:
+    """Exclude warmups and summarize timings relative to each baseline."""
     rows: list[dict[str, str | int | float]] = []
     for dataset in dict.fromkeys(trial.dataset for trial in trials):
         baseline = statistics.median(
@@ -225,6 +233,7 @@ def summarize(trials: list[Trial]) -> list[dict[str, str | int | float]]:
 
 
 def plot_results(rows: list[dict[str, str | int | float]], output: Path) -> None:
+    """Save median timings with min-max ranges as an atomic PNG."""
     figure = Figure(figsize=(13, 5), layout="constrained")
     for index, dataset in enumerate(("many_small", "few_large", "words"), start=1):
         selected = [row for row in rows if row["dataset"] == dataset]
@@ -274,29 +283,38 @@ def run_benchmark(config: Config, output_root: Path) -> Path:
     data_rng, order_rng = random.Random(config.seed), random.Random(config.seed + 1)
     trials: list[Trial] = []
     manifests: dict[str, dict[str, str]] = {}
-    with TemporaryDirectory(prefix="data-", dir=destination) as raw:
-        work = Path(raw)
-        for dataset, count, size in (
-            ("many_small", config.small_files, config.small_bytes),
-            ("few_large", config.large_files, config.large_mib * 1024**2),
-        ):
-            source = work / dataset
-            generate_files(source, count, size, data_rng)
-            runs, manifest = benchmark_files(source, work, dataset, config, order_rng)
-            trials.extend(runs)
-            manifests[dataset] = manifest
-        vocabulary = (
-            "python",
-            "data",
-            "word",
-            "mapreduce",
-            "async",
-            "файли",
-            "дані",
-            "слово",
-        )
-        text = " ".join(data_rng.choices(vocabulary, k=config.words))
-        trials.extend(benchmark_words(text, config, order_rng))
+    try:
+        with TemporaryDirectory(prefix="data-", dir=destination) as raw:
+            work = Path(raw)
+            for dataset, count, size in (
+                ("many_small", config.small_files, config.small_bytes),
+                ("few_large", config.large_files, config.large_mib * 1024**2),
+            ):
+                source = work / dataset
+                generate_files(source, count, size, data_rng)
+                runs, manifest = benchmark_files(
+                    source, work, dataset, config, order_rng
+                )
+                trials.extend(runs)
+                manifests[dataset] = manifest
+            vocabulary = (
+                "python",
+                "data",
+                "word",
+                "mapreduce",
+                "async",
+                "файли",
+                "дані",
+                "слово",
+            )
+            text = " ".join(data_rng.choices(vocabulary, k=config.words))
+            trials.extend(benchmark_words(text, config, order_rng))
+    except BaseException:
+        try:
+            destination.rmdir()
+        except OSError:
+            logging.exception("Не вдалося прибрати папку невдалого benchmark.")
+        raise
     rows = summarize(trials)
     result = {
         "schema_version": 1,
@@ -352,6 +370,7 @@ def run_benchmark(config: Config, output_root: Path) -> Path:
 
 
 def main(argv: list[str] | None = None) -> int:
+    """Run the benchmark CLI; return 0, 1, or 130 for its outcome."""
     parser = argparse.ArgumentParser(description=__doc__)
     for name, default in asdict(Config()).items():
         parser.add_argument(

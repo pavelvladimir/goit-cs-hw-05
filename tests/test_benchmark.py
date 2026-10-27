@@ -16,6 +16,7 @@ def test_benchmark_bundle_has_verified_samples_and_no_working_data(
     warmups: int,
     relative_output: bool,
 ) -> None:
+    """Check real result bundles, cleanup, and paths in JSON and stdout."""
     config = Config(
         small_files=3,
         small_bytes=17,
@@ -55,6 +56,7 @@ def test_benchmark_bundle_has_verified_samples_and_no_working_data(
 
 
 def test_summary_excludes_warmups_and_uses_median() -> None:
+    """Keep warmup outliers out of medians, ranges, and speedups."""
     trials = [
         Trial(
             "sample",
@@ -77,6 +79,7 @@ def test_summary_excludes_warmups_and_uses_median() -> None:
 
 
 def test_benchmark_rejects_incorrect_word_counts() -> None:
+    """Reject a timed MapReduce result that disagrees with Counter."""
     import random
 
     with (
@@ -87,17 +90,20 @@ def test_benchmark_rejects_incorrect_word_counts() -> None:
 
 
 def test_invalid_benchmark_configuration_creates_nothing(tmp_path: Path) -> None:
+    """Reject invalid sizes before creating any run artifacts."""
     with pytest.raises(ValueError):
         run_benchmark(Config(small_files=0), tmp_path)
     assert list(tmp_path.iterdir()) == []
 
 
 def test_benchmark_rejects_corrupted_copy_and_cleans_workdir(tmp_path: Path) -> None:
+    """Reject changed copy bytes and remove the failed run directory."""
     from scripts import benchmark
 
     original = benchmark.sequential_copy
 
     def corrupt(source: Path, output: Path) -> None:
+        """Change one copied file to exercise independent hash validation."""
         original(source, output)
         next(output.rglob("*.bin")).write_bytes(b"corrupted")
 
@@ -108,9 +114,56 @@ def test_benchmark_rejects_corrupted_copy_and_cleans_workdir(tmp_path: Path) -> 
             )
     assert not list(tmp_path.rglob("data-*"))
     assert not list(tmp_path.rglob("results.json"))
+    assert list(tmp_path.iterdir()) == []
+
+
+@pytest.mark.parametrize("stage", ["generate_files", "benchmark_words"])
+@pytest.mark.parametrize("interrupt", [False, True])
+def test_failed_benchmark_removes_only_its_run(
+    tmp_path: Path, stage: str, interrupt: bool
+) -> None:
+    """Clean failed or interrupted runs without touching earlier results."""
+    previous = tmp_path / "previous"
+    previous.mkdir()
+    report = previous / "results.json"
+    report.write_bytes(b'{"keep": true}')
+    error = KeyboardInterrupt() if interrupt else OSError("benchmark failed")
+    with patch(f"scripts.benchmark.{stage}", side_effect=error):
+        with pytest.raises(type(error)) as raised:
+            run_benchmark(
+                Config(
+                    small_files=1,
+                    small_bytes=10,
+                    large_files=1,
+                    large_mib=1,
+                    repeats=1,
+                    warmups=0,
+                ),
+                tmp_path,
+            )
+    assert raised.value is error
+    assert list(tmp_path.iterdir()) == [previous]
+    assert report.read_bytes() == b'{"keep": true}'
+
+
+def test_benchmark_cleanup_error_does_not_mask_original_failure(
+    tmp_path: Path, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Log failed directory removal while preserving the benchmark exception."""
+    error = RuntimeError("generation failed")
+    with (
+        patch("scripts.benchmark.generate_files", side_effect=error),
+        patch.object(Path, "rmdir", side_effect=PermissionError("cleanup denied")),
+        pytest.raises(RuntimeError) as raised,
+    ):
+        run_benchmark(Config(), tmp_path)
+    assert raised.value is error
+    assert "cleanup denied" in caplog.text
+    assert not list(tmp_path.rglob("data-*"))
 
 
 def test_cli_accepts_zero_warmups(tmp_path: Path) -> None:
+    """Allow disabling warmups through the public CLI."""
     from scripts import benchmark
 
     with (

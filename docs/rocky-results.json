@@ -1,5 +1,5 @@
 {
-  "started_at": "2026-10-27T05:34:14.798322+00:00",
+  "started_at": "2026-10-27T05:45:57.265121+00:00",
   "status": "success",
   "environment": {
     "os_release": {
@@ -47,7 +47,7 @@
       "ip6tnl0": 128,
       "ip6gre0": 128
     },
-    "image_id": "sha256:81cbd415d226e3f63becc2d97325af8d669cd87756f0bec182f556cd6c5ed663",
+    "image_id": "sha256:be6aaa315cbf7600c0d2511369ed48df6ecb93a0ec736600b330680f2e9dcc54",
     "packages": {
       "CacheControl": "0.14.4",
       "Columnar": "1.4.1",
@@ -137,21 +137,21 @@
     "report_validation.py": "763b95b757b9b831b7281aa2a23f0f4f57a803713a287975eda1594dc2b6cb7b",
     "schemas/run-report-v1.schema.json": "b60f8631452fea43bb693db83e6e833a4b06ffa0a56672a7f9194c391977b999",
     "scripts/__init__.py": "f7801c33cf7a20b67005c1e6de21f90db7fa11d9d43d1b9907b72c5490beb9d5",
-    "scripts/benchmark.py": "2e2c918e2e74012ab78be790ecde584b6e29d616d4ed24fa5b099a04436397e8",
+    "scripts/benchmark.py": "e59e290bfded9b4f9ef5539fa3f3d43706c9eac4531e20a3100721a8ba7edcd1",
     "scripts/check_rocky.py": "122047fb3f8ce4e973cf482913b141a03441f82c2a71c83a04104e19c7f8d4ef",
-    "scripts/demo.py": "e8caf3d8c71524ce417392844bbe91b570273a4922344d5ba4bee25a540d571e",
+    "scripts/demo.py": "67e56769c393524921b9f35b4f3864144dc41db773b38c3ae6d2f2e2fb726097",
     "scripts/validate_report.py": "d8b23b1deb4d15740b3bd74e2e4863df1d0d8973ecd48d6d6d5f955e930b42a4",
     "tests/__init__.py": "3aeaecf2890b77ecf8c864ed1910eb7a86863953431304ffb3fb85f56b146768",
-    "tests/conftest.py": "2201c91e6b869613fadfd722e232b8cfdd0e60f75effe3a1aa59f23b5f1ca679",
-    "tests/process_probe.py": "783a37dcbd88eb53121a10a128f09b372b59a8fca01c79fac8a03318716dda0a",
-    "tests/test_benchmark.py": "b313a59bb1dd2b7bfccf69d6c5e450bb11312066abca10826015924b318a349b",
-    "tests/test_cli.py": "03e45ab6e5edff7e7a0f829d9aab152af740c0f48fd0463594387fc476bb0d33",
-    "tests/test_mapreduce.py": "07ba52adeb0ea2deaab54fec5d05921a88ec2576eea81a3d4295a64b3e869ed4",
-    "tests/test_permissions.py": "4fbff3e036589e10bba483f65f0d4d41e1c01600e2e112e2e992d52f2806c5f5",
-    "tests/test_processes.py": "bb13cfc5ffb2052f4852dbb7c15101d1dd424e4b9428b226fc989ca058e08890",
-    "tests/test_report_schema.py": "12a192e836747824cf4707e86d487be7cf09e6104e62520632f7b76ea9a38050",
-    "tests/test_reports.py": "0c0f9ee13e918ea4f0ee49c27c954936bc803c9975c2b383b4b32a8a9a01d848",
-    "tests/test_sorter.py": "592428e11f9990891719c717ee770c62b4db2d06cc55bab6fbc028480ee6c8a6",
+    "tests/conftest.py": "b4d05658c01918512c66bb03a13f1d9cee0dd999b1493fb7c1223b5fb7c911f8",
+    "tests/process_probe.py": "e3c23a6bf1f0a74a338a02b94a55c1eec0fd8d2ac1987957e2c832797ac68522",
+    "tests/test_benchmark.py": "97257e6ac1f619f81d90a868f07535e0ac58be1fe0ee7823d98cde599606feed",
+    "tests/test_cli.py": "e9173e28fb3c2718d6df27dc14959c784e01417e7ad5b13268e938ae93c5ea49",
+    "tests/test_mapreduce.py": "031953d3064e423203241dcdbccd2a24f85ee17737bfb39a930a93ddd9861ee6",
+    "tests/test_permissions.py": "283d600deb22f698217dd974dc70b8f3ee0e2ad6753d696e9aa27ddf3aa5939a",
+    "tests/test_processes.py": "1aa403d2f95c7486e1bc18a413d92268a5853dbe3f9a9653024bee420956a2c8",
+    "tests/test_report_schema.py": "05c654d6bf0d8637ca9fd01f4118441c0bb549b59e72f0ddccb39ecb2d97cad2",
+    "tests/test_reports.py": "6f5a4858b258345337a7ffbbbfe4e5364b88ec492110efc6b96a2d959708b00a",
+    "tests/test_sorter.py": "90935adbb3d9079f995ee23cf77f9a4978c70b6372b187c875b93818795d5ef3",
     "uv.lock": "1459541272a4f1533dba985d51f364e38603b81410068f50aefface559dc1b43"
   },
   "steps": [
@@ -161,7 +161,7 @@
         "check"
       ],
       "exit_code": 0,
-      "elapsed_seconds": 22.461197135000475
+      "elapsed_seconds": 22.038901635998627
     },
     {
       "command": [
@@ -173,7 +173,7 @@
         "/results/coverage.json"
       ],
       "exit_code": 0,
-      "elapsed_seconds": 0.262618583999938
+      "elapsed_seconds": 0.26107916699947964
     },
     {
       "command": [
@@ -182,11 +182,11 @@
         "validate-reports"
       ],
       "exit_code": 0,
-      "elapsed_seconds": 1.8328030850007053
+      "elapsed_seconds": 1.860830043000533
     }
   ],
   "pytest": {
-    "tests": 170,
+    "tests": 175,
     "failures": 0,
     "errors": 0,
     "skipped": 0
@@ -226,6 +226,6 @@
       900
     ]
   },
-  "finished_at": "2026-10-27T05:34:39.448060+00:00",
+  "finished_at": "2026-10-27T05:46:21.520904+00:00",
   "exit_code": 0
 }

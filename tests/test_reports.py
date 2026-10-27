@@ -22,6 +22,7 @@ from report_validation import validate_report
 
 
 def test_atomic_output_retains_previous_file_on_failure(tmp_path: Path) -> None:
+    """Publish only complete output and clean up a failed temporary write."""
     output = tmp_path / "output.txt"
     output.write_text("old")
     with pytest.raises(OSError, match="failed"):
@@ -37,6 +38,7 @@ def test_atomic_output_retains_previous_file_on_failure(tmp_path: Path) -> None:
 
 
 def test_json_serialization_failure_preserves_existing_report(tmp_path: Path) -> None:
+    """Retain the old report when new data cannot be serialized."""
     report = tmp_path / "report.json"
     write_json(report, {"old": True})
     with pytest.raises(TypeError):
@@ -46,10 +48,12 @@ def test_json_serialization_failure_preserves_existing_report(tmp_path: Path) ->
 
 
 def test_failed_chart_preserves_previous_png(tmp_path: Path) -> None:
+    """Keep the old image when rendering writes only a partial PNG."""
     output = tmp_path / "plot.png"
     output.write_bytes(b"previous PNG")
 
     def broken_save(self: Figure, path: Path, **kwargs: object) -> None:
+        """Simulate a disk failure after writing incomplete image bytes."""
         path.write_bytes(b"partial PNG")
         raise OSError("disk full")
 
@@ -60,6 +64,7 @@ def test_failed_chart_preserves_previous_png(tmp_path: Path) -> None:
 
 
 def test_failed_publication_never_exposes_partial_copy(tmp_path: Path) -> None:
+    """Leave no destination file when hard-link publication fails."""
     source = tmp_path / "file.txt"
     source.write_text("complete data")
     output = tmp_path / "out"
@@ -70,6 +75,7 @@ def test_failed_publication_never_exposes_partial_copy(tmp_path: Path) -> None:
 
 
 def test_sorter_success_failure_and_collision_reports(tmp_path: Path) -> None:
+    """Verify copy statistics and report status across successful and failed runs."""
     source, output, report = tmp_path / "src", tmp_path / "out", tmp_path / "run.json"
     source.mkdir()
     (source / "file.txt").write_bytes(b"12345")
@@ -104,6 +110,7 @@ def test_sorter_success_failure_and_collision_reports(tmp_path: Path) -> None:
 def test_word_report_has_exact_input_hashes_and_frequencies(
     http_url: str, tmp_path: Path
 ) -> None:
+    """Check raw and decoded hashes, counts, and failure or cancellation reports."""
     report, chart = tmp_path / "report.json", tmp_path / "chart.png"
     with patch.object(mapreduce_words, "configure_logging"):
         assert (
@@ -143,6 +150,7 @@ def test_word_report_has_exact_input_hashes_and_frequencies(
 
 
 def test_unsafe_report_paths_rejected_before_touching_data(tmp_path: Path) -> None:
+    """Reject overlapping outputs and hard-link aliases before overwriting data."""
     source, output = tmp_path / "src", tmp_path / "out"
     source.mkdir()
     original = source / "original.json"
@@ -170,6 +178,7 @@ def test_unsafe_report_paths_rejected_before_touching_data(tmp_path: Path) -> No
 def test_report_write_failure_is_visible(
     tmp_path: Path, code: int, valid_sorter_report: dict[str, Any]
 ) -> None:
+    """Expose report-write failure while retaining the cancellation exit code."""
     with patch("common.write_json", side_effect=OSError("disk full")) as write:
         result = finish_report(
             tmp_path / "report.json", valid_sorter_report, perf_counter(), code
@@ -181,6 +190,7 @@ def test_report_write_failure_is_visible(
 def test_source_symlink_loop_is_logged_and_reported(
     tmp_path: Path,
 ) -> None:
+    """Report an unresolvable source loop without altering either symlink."""
     first, second, report = (
         tmp_path / "first",
         tmp_path / "second",
@@ -199,6 +209,7 @@ def test_source_symlink_loop_is_logged_and_reported(
 
 
 def test_hardlinked_log_cannot_modify_source(tmp_path: Path) -> None:
+    """Reject a log hard-linked to source data before logging or copying."""
     source, output = tmp_path / "source", tmp_path / "out"
     source.mkdir()
     original = source / "original.txt"
@@ -219,6 +230,7 @@ def test_hardlinked_log_cannot_modify_source(tmp_path: Path) -> None:
 
 
 def test_case_only_output_aliases_are_rejected_before_creation(tmp_path: Path) -> None:
+    """Reject case-only output and source aliases without creating files."""
     image = tmp_path / "Chart.png"
     report = tmp_path / "chart.PNG"
     assert mapreduce_words.main(["--output", str(image), "--report", str(report)]) == 1
