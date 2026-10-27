@@ -8,9 +8,12 @@ import pytest
 from scripts.benchmark import Config, Trial, benchmark_words, run_benchmark, summarize
 
 
-@pytest.mark.parametrize("warmups", [0, 1])
+@pytest.mark.parametrize(("warmups", "relative_output"), [(0, False), (1, True)])
 def test_benchmark_bundle_has_verified_samples_and_no_working_data(
-    tmp_path: Path, warmups: int
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    warmups: int,
+    relative_output: bool,
 ) -> None:
     config = Config(
         small_files=3,
@@ -21,8 +24,16 @@ def test_benchmark_bundle_has_verified_samples_and_no_working_data(
         repeats=2,
         warmups=warmups,
     )
-    folder = run_benchmark(config, tmp_path)
-    result = json.loads((folder / "results.json").read_text())
+    monkeypatch.chdir(tmp_path)
+    output_root = Path("results") if relative_output else tmp_path / "results"
+    folder = run_benchmark(config, output_root)
+    report_text = (folder / "results.json").read_text()
+    result = json.loads(report_text)
+    location = Path(result["environment"]["filesystem_location"])
+    assert not location.is_absolute()
+    assert ".." not in location.parts
+    assert (output_root / location).resolve() == folder.resolve()
+    assert str(tmp_path) not in report_text
     assert len(result["trials"]) == 15 * (2 + warmups)
     assert sum(trial["warmup"] for trial in result["trials"]) == 15 * warmups
     assert len(result["summary"]) == 15

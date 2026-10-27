@@ -308,7 +308,7 @@ def run_benchmark(config: Config, output_root: Path) -> Path:
             "machine": platform.machine(),
             "cpu_count": os.cpu_count(),
             "gil_enabled": getattr(sys, "_is_gil_enabled", lambda: None)(),
-            "filesystem_location": str(destination.resolve()),
+            "filesystem_location": destination.name,
         },
         "methodology": {
             "cache": "warm/uncontrolled OS cache; no cache flush",

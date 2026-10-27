@@ -47,8 +47,9 @@ SHA-256 перевіреного `uv.lock`:
 до неї не входять. Після зміни lockfile аудит потрібно повторити.
 
 Збережено [підсумок із датою та SHA-256](audit/audit-summary.json)
-і [повний JSON-результат](audit/pip-audit.json). Аудит відображає стан бази
-відомих вразливостей на момент перевірки.
+і [повний JSON-результат](audit/pip-audit.json). У підсумку шляхи команд замінено
+на відносні до кореня проєкту; результати й SHA-256 не змінено. Аудит відображає
+стан бази відомих вразливостей на момент перевірки.
 
 ## Rocky Linux
 
@@ -62,7 +63,7 @@ SHA-256 перевіреного `uv.lock`:
 | Docker | Engine 29.8.2, Desktop 4.95.0 |
 | Інструменти | Python 3.14.6, uv 0.13.0, Make 4.4.1 |
 | Запуск | UID 501, GID 20; зовнішня мережа вимкнена |
-| Тести | 170 пройшли за 17,55 с |
+| Тести | 170 пройшли за 17,94 с |
 
 Усі 13 тестів прав доступу пройшли також на macOS. У Rocky файлові операції
 виконувалися в Linux tmpfs. AMD64, окремий сервер Rocky, інші файлові системи
@@ -71,7 +72,8 @@ SHA-256 перевіреного `uv.lock`:
 ## Збережені приклади
 
 [Benchmark](benchmark.md) містить JSON, CSV і графік запуску до додавання
-JSON Schema. Його SHA-256 описують попередній стан `common.py` та `uv.lock`.
+JSON Schema. Його SHA-256 описують стан коду на час вимірювання, до змін
+`common.py`, `uv.lock` і поля шляху в benchmark.
 
 [Графік Gutenberg](images/top_words.png) отримано того самого дня до уточнення
 Unicode-токенізації: 127 870 слів, 6 824 унікальні. Це приклад попереднього
@@ -81,9 +83,9 @@ Unicode-токенізації: 127 870 слів, 6 824 унікальні. Це
 
 | Шлях | Зміст |
 | --- | --- |
-| `artifacts/20261027T050540Z-docs-review-b85_2jmu/check.log` | Перевірка macOS |
+| `artifacts/coderabbit-paths-check.log` | Перевірка macOS після виправлення шляхів у звітах |
 | `artifacts/20261027T050540Z-docs-review-b85_2jmu/demo.log` | Demo та валідація звітів на macOS |
-| `artifacts/rocky/20261027T044359Z-SUYGPd/` | Логи, JUnit, coverage і demo в Rocky |
+| `artifacts/rocky/20261027T052308Z-nl2ekU/` | Логи, JUnit, coverage і demo в Rocky |
 | `artifacts/20261027T045100Z-f2mgsfbg/` | Аудит, копія lockfile, requirements і журнали |
 | `artifacts/benchmarks/20261027T034044-nhsqrfe_/` | Повний запуск benchmark |
 | `htmlcov/index.html`, `coverage.xml` | Покриття останнього локального прогону |

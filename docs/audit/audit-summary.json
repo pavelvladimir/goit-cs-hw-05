@@ -9,6 +9,7 @@
   },
   "service": "pypi",
   "scope": "All dependency groups exported from uv.lock; markers evaluated on this macOS arm64/Python environment.",
+  "path_representation": "Command paths are relative to the repository root; original command arguments used absolute paths.",
   "commands": [
     {
       "argv": [
@@ -27,7 +28,7 @@
         "--locked",
         "pip-audit",
         "--cache-dir",
-        "/Users/paveltravnicek/Documents/ChatGPT/goit-cs-hw-05/.cache/pip-audit/20261027T045100Z-f2mgsfbg",
+        ".cache/pip-audit/20261027T045100Z-f2mgsfbg",
         "--require-hashes",
         "--disable-pip",
         "--strict",
@@ -38,9 +39,9 @@
         "--format",
         "json",
         "--output",
-        "/Users/paveltravnicek/Documents/ChatGPT/goit-cs-hw-05/artifacts/20261027T045100Z-f2mgsfbg/pip-audit.json",
+        "artifacts/20261027T045100Z-f2mgsfbg/pip-audit.json",
         "-r",
-        "/Users/paveltravnicek/Documents/ChatGPT/goit-cs-hw-05/artifacts/20261027T045100Z-f2mgsfbg/requirements.txt"
+        "artifacts/20261027T045100Z-f2mgsfbg/requirements.txt"
       ],
       "started_at": "2026-10-27T04:51:04.009525+00:00",
       "finished_at": "2026-10-27T04:51:08.346893+00:00",
