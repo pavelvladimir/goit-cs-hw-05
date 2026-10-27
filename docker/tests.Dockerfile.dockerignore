@@ -1,0 +1,22 @@
+# Allow only project inputs, never local environments, credentials or artifacts.
+**
+!*.py
+!pyproject.toml
+!uv.lock
+!.python-version
+!Makefile
+!README.md
+!scripts/
+!scripts/*.py
+!tests/
+!tests/*.py
+!schemas/
+!schemas/*.json
+!examples/
+!examples/**
+!docs/
+!docs/*.md
+!docker/
+!docker/tests.Dockerfile
+!docker/tests.Dockerfile.dockerignore
+!docker/check-rocky.sh

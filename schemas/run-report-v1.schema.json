@@ -1,0 +1,190 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:goit-cs-hw-05:run-report:1",
+  "title": "GoIT CS HW 05 CLI run report, version 1",
+  "description": "Reports emitted by async_sorter and mapreduce_words. All references are local.",
+  "type": "object",
+  "required": [
+    "schema_version", "task", "started_at", "finished_at", "elapsed_seconds",
+    "status", "exit_code", "source", "output", "parameters", "statistics"
+  ],
+  "properties": {
+    "schema_version": {"type": "integer", "const": 1},
+    "task": {"enum": ["async_sorter", "mapreduce_words"]},
+    "started_at": {"$ref": "#/$defs/utcTimestamp"},
+    "finished_at": {"$ref": "#/$defs/utcTimestamp"},
+    "elapsed_seconds": {"type": "number", "minimum": 0},
+    "status": {"enum": ["success", "failed", "cancelled"]},
+    "exit_code": {"type": "integer", "enum": [0, 1, 130]},
+    "output": {"$ref": "#/$defs/absolutePath"},
+    "error": {"type": "string"}
+  },
+  "allOf": [
+    {
+      "if": {"properties": {"task": {"const": "async_sorter"}}},
+      "then": {"$ref": "#/$defs/sorter"},
+      "else": {"$ref": "#/$defs/words"}
+    },
+    {
+      "if": {"properties": {"status": {"const": "success"}}},
+      "then": {
+        "properties": {
+          "exit_code": {"const": 0},
+          "statistics": {"properties": {"errors": {"const": 0}}}
+        },
+        "not": {"required": ["error"]}
+      }
+    },
+    {
+      "if": {"properties": {"status": {"const": "failed"}}},
+      "then": {
+        "properties": {
+          "exit_code": {"const": 1},
+          "statistics": {"properties": {"errors": {"minimum": 1}}}
+        }
+      }
+    },
+    {
+      "if": {"properties": {"status": {"const": "cancelled"}}},
+      "then": {
+        "properties": {"exit_code": {"const": 130}},
+        "not": {"required": ["error"]}
+      }
+    }
+  ],
+  "unevaluatedProperties": false,
+  "$defs": {
+    "positiveInteger": {"type": "integer", "minimum": 1},
+    "counter": {"type": "integer", "minimum": 0},
+    "absolutePath": {
+      "type": "string",
+      "pattern": "^(?:/|[A-Za-z]:[\\\\/]|\\\\\\\\)"
+    },
+    "utcTimestamp": {
+      "type": "string",
+      "format": "date-time",
+      "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-5][0-9](?:\\.[0-9]{1,6})?(?:Z|\\+00:00)$"
+    },
+    "sha256": {
+      "type": "string",
+      "minLength": 64,
+      "maxLength": 64,
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "sorter": {
+      "properties": {
+        "source": {"$ref": "#/$defs/absolutePath"},
+        "parameters": {
+          "type": "object",
+          "required": ["workers", "chunk_bytes"],
+          "properties": {
+            "workers": {"$ref": "#/$defs/positiveInteger"},
+            "chunk_bytes": {"$ref": "#/$defs/positiveInteger"}
+          },
+          "additionalProperties": false
+        },
+        "statistics": {
+          "type": "object",
+          "required": ["copied", "skipped", "errors", "bytes_copied", "collisions"],
+          "properties": {
+            "copied": {"$ref": "#/$defs/counter"},
+            "skipped": {"$ref": "#/$defs/counter"},
+            "errors": {"$ref": "#/$defs/counter"},
+            "bytes_copied": {"$ref": "#/$defs/counter"},
+            "collisions": {"$ref": "#/$defs/counter"}
+          },
+          "additionalProperties": false
+        }
+      }
+    },
+    "downloadSource": {
+      "type": "object",
+      "required": ["requested_url"],
+      "properties": {
+        "requested_url": {"type": "string"},
+        "final_url": {"type": "string", "minLength": 1},
+        "charset": {"type": "string", "minLength": 1},
+        "bytes_downloaded": {"$ref": "#/$defs/counter"},
+        "sha256_bytes": {"$ref": "#/$defs/sha256"},
+        "sha256_text_utf8": {"$ref": "#/$defs/sha256"}
+      },
+      "oneOf": [
+        {"maxProperties": 1},
+        {
+          "required": [
+            "final_url", "charset", "bytes_downloaded", "sha256_bytes", "sha256_text_utf8"
+          ]
+        }
+      ],
+      "additionalProperties": false
+    },
+    "words": {
+      "required": ["frequencies", "top_words"],
+      "properties": {
+        "source": {"$ref": "#/$defs/downloadSource"},
+        "parameters": {
+          "type": "object",
+          "required": ["workers", "chunk_size", "top", "timeout", "max_bytes"],
+          "properties": {
+            "workers": {"$ref": "#/$defs/positiveInteger"},
+            "chunk_size": {"$ref": "#/$defs/positiveInteger"},
+            "top": {"$ref": "#/$defs/positiveInteger"},
+            "timeout": {"type": "number", "exclusiveMinimum": 0},
+            "max_bytes": {"$ref": "#/$defs/positiveInteger"}
+          },
+          "additionalProperties": false
+        },
+        "statistics": {
+          "type": "object",
+          "required": ["total_words", "unique_words", "errors"],
+          "properties": {
+            "total_words": {"$ref": "#/$defs/counter"},
+            "unique_words": {"$ref": "#/$defs/counter"},
+            "errors": {"type": "integer", "enum": [0, 1]}
+          },
+          "additionalProperties": false
+        },
+        "frequencies": {
+          "type": "object",
+          "propertyNames": {"minLength": 1},
+          "additionalProperties": {"$ref": "#/$defs/positiveInteger"}
+        },
+        "top_words": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["word", "count"],
+            "properties": {
+              "word": {"type": "string", "minLength": 1},
+              "count": {"$ref": "#/$defs/positiveInteger"}
+            },
+            "additionalProperties": false
+          }
+        }
+      },
+      "allOf": [
+        {
+          "if": {"properties": {"status": {"const": "success"}}},
+          "then": {
+            "properties": {
+              "source": {"required": ["final_url"]},
+              "statistics": {
+                "properties": {
+                  "total_words": {"minimum": 1},
+                  "unique_words": {"minimum": 1}
+                }
+              },
+              "frequencies": {"minProperties": 1},
+              "top_words": {"minItems": 1}
+            }
+          }
+        },
+        {
+          "if": {"properties": {"status": {"const": "failed"}}},
+          "then": {"required": ["error"]},
+          "else": {"properties": {"statistics": {"properties": {"errors": {"const": 0}}}}}
+        }
+      ]
+    }
+  }
+}

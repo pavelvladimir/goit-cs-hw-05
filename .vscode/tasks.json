@@ -1,0 +1,129 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "make init",
+      "type": "process",
+      "command": "make",
+      "args": [
+        "init"
+      ],
+      "options": {
+        "cwd": "${workspaceFolder}"
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "make check",
+      "type": "process",
+      "command": "make",
+      "args": [
+        "check"
+      ],
+      "options": {
+        "cwd": "${workspaceFolder}"
+      },
+      "problemMatcher": [],
+      "group": {
+        "kind": "test",
+        "isDefault": true
+      }
+    },
+    {
+      "label": "make check-rocky",
+      "type": "process",
+      "command": "make",
+      "args": [
+        "check-rocky"
+      ],
+      "options": {
+        "cwd": "${workspaceFolder}"
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "make lint",
+      "type": "process",
+      "command": "make",
+      "args": [
+        "lint"
+      ],
+      "options": {
+        "cwd": "${workspaceFolder}"
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "make typecheck",
+      "type": "process",
+      "command": "make",
+      "args": [
+        "typecheck"
+      ],
+      "options": {
+        "cwd": "${workspaceFolder}"
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "make test",
+      "type": "process",
+      "command": "make",
+      "args": [
+        "test"
+      ],
+      "options": {
+        "cwd": "${workspaceFolder}"
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "make coverage",
+      "type": "process",
+      "command": "make",
+      "args": [
+        "coverage"
+      ],
+      "options": {
+        "cwd": "${workspaceFolder}"
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "make demo",
+      "type": "process",
+      "command": "make",
+      "args": [
+        "demo"
+      ],
+      "options": {
+        "cwd": "${workspaceFolder}"
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "make audit",
+      "type": "process",
+      "command": "make",
+      "args": [
+        "audit"
+      ],
+      "options": {
+        "cwd": "${workspaceFolder}"
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "make benchmark",
+      "type": "process",
+      "command": "make",
+      "args": [
+        "benchmark"
+      ],
+      "options": {
+        "cwd": "${workspaceFolder}"
+      },
+      "problemMatcher": []
+    }
+  ]
+}
