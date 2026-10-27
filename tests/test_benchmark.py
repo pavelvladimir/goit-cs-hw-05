@@ -12,6 +12,7 @@ from scripts.benchmark import Config, Trial, benchmark_words, run_benchmark, sum
 def test_benchmark_bundle_has_verified_samples_and_no_working_data(
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,
+    capsys: pytest.CaptureFixture[str],
     warmups: int,
     relative_output: bool,
 ) -> None:
@@ -27,6 +28,9 @@ def test_benchmark_bundle_has_verified_samples_and_no_working_data(
     monkeypatch.chdir(tmp_path)
     output_root = Path("results") if relative_output else tmp_path / "results"
     folder = run_benchmark(config, output_root)
+    terminal_output = capsys.readouterr()
+    assert terminal_output.out.splitlines()[-1] == f"Результати: {folder.name}"
+    assert str(tmp_path) not in terminal_output.out + terminal_output.err
     report_text = (folder / "results.json").read_text()
     result = json.loads(report_text)
     location = Path(result["environment"]["filesystem_location"])

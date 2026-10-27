@@ -63,7 +63,7 @@ SHA-256 перевіреного `uv.lock`:
 | Docker | Engine 29.8.2, Desktop 4.95.0 |
 | Інструменти | Python 3.14.6, uv 0.13.0, Make 4.4.1 |
 | Запуск | UID 501, GID 20; зовнішня мережа вимкнена |
-| Тести | 170 пройшли за 17,94 с |
+| Тести | 170 пройшли за 17,61 с |
 
 Усі 13 тестів прав доступу пройшли також на macOS. У Rocky файлові операції
 виконувалися в Linux tmpfs. AMD64, окремий сервер Rocky, інші файлові системи
@@ -83,9 +83,9 @@ Unicode-токенізації: 127 870 слів, 6 824 унікальні. Це
 
 | Шлях | Зміст |
 | --- | --- |
-| `artifacts/coderabbit-paths-check.log` | Перевірка macOS після виправлення шляхів у звітах |
+| `artifacts/coderabbit-terminal-check.log` | Перевірка macOS після виправлення виводу benchmark |
 | `artifacts/20261027T050540Z-docs-review-b85_2jmu/demo.log` | Demo та валідація звітів на macOS |
-| `artifacts/rocky/20261027T052308Z-nl2ekU/` | Логи, JUnit, coverage і demo в Rocky |
+| `artifacts/rocky/20261027T053413Z-wpd2Ec/` | Логи, JUnit, coverage і demo в Rocky |
 | `artifacts/20261027T045100Z-f2mgsfbg/` | Аудит, копія lockfile, requirements і журнали |
 | `artifacts/benchmarks/20261027T034044-nhsqrfe_/` | Повний запуск benchmark |
 | `htmlcov/index.html`, `coverage.xml` | Покриття останнього локального прогону |

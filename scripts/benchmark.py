@@ -347,7 +347,7 @@ def run_benchmark(config: Config, output_root: Path) -> Path:
             f"median={row['median_seconds']:.6f}s "
             f"speedup={row['speedup_vs_baseline']:.2f}x"
         )
-    print(f"Результати: {destination}")
+    print(f"Результати: {destination.name}")
     return destination
 
 
