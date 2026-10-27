@@ -1,5 +1,5 @@
 {
-  "started_at": "2026-10-27T05:45:57.265121+00:00",
+  "started_at": "2026-10-27T05:59:57.906650+00:00",
   "status": "success",
   "environment": {
     "os_release": {
@@ -47,7 +47,7 @@
       "ip6tnl0": 128,
       "ip6gre0": 128
     },
-    "image_id": "sha256:be6aaa315cbf7600c0d2511369ed48df6ecb93a0ec736600b330680f2e9dcc54",
+    "image_id": "sha256:d07f6a9b78e9f4b35188d3a5859f80ca9eeff503274fcb4483cf1b4690137bf2",
     "packages": {
       "CacheControl": "0.14.4",
       "Columnar": "1.4.1",
@@ -137,16 +137,16 @@
     "report_validation.py": "763b95b757b9b831b7281aa2a23f0f4f57a803713a287975eda1594dc2b6cb7b",
     "schemas/run-report-v1.schema.json": "b60f8631452fea43bb693db83e6e833a4b06ffa0a56672a7f9194c391977b999",
     "scripts/__init__.py": "f7801c33cf7a20b67005c1e6de21f90db7fa11d9d43d1b9907b72c5490beb9d5",
-    "scripts/benchmark.py": "e59e290bfded9b4f9ef5539fa3f3d43706c9eac4531e20a3100721a8ba7edcd1",
+    "scripts/benchmark.py": "9eb8e77ad8dc67e57db9364387c6bf84e5d8bda740a459114a7a2636de7e56a4",
     "scripts/check_rocky.py": "122047fb3f8ce4e973cf482913b141a03441f82c2a71c83a04104e19c7f8d4ef",
     "scripts/demo.py": "67e56769c393524921b9f35b4f3864144dc41db773b38c3ae6d2f2e2fb726097",
     "scripts/validate_report.py": "d8b23b1deb4d15740b3bd74e2e4863df1d0d8973ecd48d6d6d5f955e930b42a4",
     "tests/__init__.py": "3aeaecf2890b77ecf8c864ed1910eb7a86863953431304ffb3fb85f56b146768",
-    "tests/conftest.py": "b4d05658c01918512c66bb03a13f1d9cee0dd999b1493fb7c1223b5fb7c911f8",
+    "tests/conftest.py": "a155e350b5cef2f54eb4f64d3c531b0fb373fea61411018e9f85344f88b2b870",
     "tests/process_probe.py": "e3c23a6bf1f0a74a338a02b94a55c1eec0fd8d2ac1987957e2c832797ac68522",
-    "tests/test_benchmark.py": "97257e6ac1f619f81d90a868f07535e0ac58be1fe0ee7823d98cde599606feed",
+    "tests/test_benchmark.py": "f595e2164bfbdf4163111fccb56621ec215dac10fbcb2b1359dac93bddb9ce58",
     "tests/test_cli.py": "e9173e28fb3c2718d6df27dc14959c784e01417e7ad5b13268e938ae93c5ea49",
-    "tests/test_mapreduce.py": "031953d3064e423203241dcdbccd2a24f85ee17737bfb39a930a93ddd9861ee6",
+    "tests/test_mapreduce.py": "eb1efbd95bc5b91dabcb03f7379490faab66719639125cc5ceec82f9a2a2b18d",
     "tests/test_permissions.py": "283d600deb22f698217dd974dc70b8f3ee0e2ad6753d696e9aa27ddf3aa5939a",
     "tests/test_processes.py": "1aa403d2f95c7486e1bc18a413d92268a5853dbe3f9a9653024bee420956a2c8",
     "tests/test_report_schema.py": "05c654d6bf0d8637ca9fd01f4118441c0bb549b59e72f0ddccb39ecb2d97cad2",
@@ -161,7 +161,7 @@
         "check"
       ],
       "exit_code": 0,
-      "elapsed_seconds": 22.038901635998627
+      "elapsed_seconds": 25.55604642900107
     },
     {
       "command": [
@@ -173,7 +173,7 @@
         "/results/coverage.json"
       ],
       "exit_code": 0,
-      "elapsed_seconds": 0.26107916699947964
+      "elapsed_seconds": 0.2625554580008611
     },
     {
       "command": [
@@ -182,11 +182,11 @@
         "validate-reports"
       ],
       "exit_code": 0,
-      "elapsed_seconds": 1.860830043000533
+      "elapsed_seconds": 1.860496792000049
     }
   ],
   "pytest": {
-    "tests": 175,
+    "tests": 187,
     "failures": 0,
     "errors": 0,
     "skipped": 0
@@ -226,6 +226,6 @@
       900
     ]
   },
-  "finished_at": "2026-10-27T05:46:21.520904+00:00",
+  "finished_at": "2026-10-27T06:00:25.683552+00:00",
   "exit_code": 0
 }

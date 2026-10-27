@@ -265,7 +265,7 @@ def plot_results(rows: list[dict[str, str | int | float]], output: Path) -> None
 
 
 def run_benchmark(config: Config, output_root: Path) -> Path:
-    """Create a unique result bundle; clean up only this run's disposable data."""
+    """Create a complete result bundle; remove only this run on any failure."""
     if (
         any(
             value <= 0
@@ -280,10 +280,10 @@ def run_benchmark(config: Config, output_root: Path) -> Path:
     output_root.mkdir(parents=True, exist_ok=True)
     stamp = datetime.now(UTC).strftime("%Y%m%dT%H%M%S-")
     destination = Path(mkdtemp(prefix=stamp, dir=output_root))
-    data_rng, order_rng = random.Random(config.seed), random.Random(config.seed + 1)
-    trials: list[Trial] = []
-    manifests: dict[str, dict[str, str]] = {}
     try:
+        data_rng, order_rng = random.Random(config.seed), random.Random(config.seed + 1)
+        trials: list[Trial] = []
+        manifests: dict[str, dict[str, str]] = {}
         with TemporaryDirectory(prefix="data-", dir=destination) as raw:
             work = Path(raw)
             for dataset, count, size in (
@@ -309,64 +309,64 @@ def run_benchmark(config: Config, output_root: Path) -> Path:
             )
             text = " ".join(data_rng.choices(vocabulary, k=config.words))
             trials.extend(benchmark_words(text, config, order_rng))
+        rows = summarize(trials)
+        result = {
+            "schema_version": 1,
+            "created_at": datetime.now(UTC).isoformat(),
+            "config": asdict(config),
+            "environment": {
+                "python": sys.version,
+                "platform": platform.platform(),
+                "machine": platform.machine(),
+                "cpu_count": os.cpu_count(),
+                "gil_enabled": getattr(sys, "_is_gil_enabled", lambda: None)(),
+                "filesystem_location": destination.name,
+            },
+            "methodology": {
+                "cache": "warm/uncontrolled OS cache; no cache flush",
+                "order": "seeded shuffle per round; raw trials preserve order",
+                "timed": "copy + event loop setup; or tokenization + counting",
+                "excluded": "generation, hashes, download, plot, report, cleanup",
+                "durability": "buffered close, no fsync; not durable storage timing",
+            },
+            "source_sha256": {
+                name: digest(ROOT / name)
+                for name in (
+                    "async_sorter.py",
+                    "mapreduce_words.py",
+                    "common.py",
+                    "scripts/benchmark.py",
+                    "uv.lock",
+                )
+            },
+            "inputs": {
+                "files_sha256": manifests,
+                "text_sha256_utf8": hashlib.sha256(text.encode()).hexdigest(),
+            },
+            "trials": [asdict(trial) for trial in trials],
+            "summary": rows,
+        }
+        write_json(destination / "results.json", result)
+        with atomic_output(destination / "trials.csv") as temporary:
+            with temporary.open("w", encoding="utf-8", newline="") as stream:
+                writer = csv.DictWriter(stream, fieldnames=list(asdict(trials[0])))
+                writer.writeheader()
+                writer.writerows(asdict(trial) for trial in trials)
+        plot_results(rows, destination / "comparison.png")
+        for row in rows:
+            print(
+                f"{row['dataset']:12} {row['method']:10} workers={row['workers']:2} "
+                f"median={row['median_seconds']:.6f}s "
+                f"speedup={row['speedup_vs_baseline']:.2f}x"
+            )
+        print(f"Результати: {destination.name}")
+        return destination
     except BaseException:
         try:
-            destination.rmdir()
+            shutil.rmtree(destination)
         except OSError:
             logging.exception("Не вдалося прибрати папку невдалого benchmark.")
         raise
-    rows = summarize(trials)
-    result = {
-        "schema_version": 1,
-        "created_at": datetime.now(UTC).isoformat(),
-        "config": asdict(config),
-        "environment": {
-            "python": sys.version,
-            "platform": platform.platform(),
-            "machine": platform.machine(),
-            "cpu_count": os.cpu_count(),
-            "gil_enabled": getattr(sys, "_is_gil_enabled", lambda: None)(),
-            "filesystem_location": destination.name,
-        },
-        "methodology": {
-            "cache": "warm/uncontrolled OS cache; no cache flush",
-            "order": "seeded shuffle per round; raw trials preserve order",
-            "timed": "copy + event loop setup; or tokenization + counting",
-            "excluded": "generation, hashes, download, plot, report, cleanup",
-            "durability": "buffered close, no fsync; not durable storage timing",
-        },
-        "source_sha256": {
-            name: digest(ROOT / name)
-            for name in (
-                "async_sorter.py",
-                "mapreduce_words.py",
-                "common.py",
-                "scripts/benchmark.py",
-                "uv.lock",
-            )
-        },
-        "inputs": {
-            "files_sha256": manifests,
-            "text_sha256_utf8": hashlib.sha256(text.encode()).hexdigest(),
-        },
-        "trials": [asdict(trial) for trial in trials],
-        "summary": rows,
-    }
-    write_json(destination / "results.json", result)
-    with atomic_output(destination / "trials.csv") as temporary:
-        with temporary.open("w", encoding="utf-8", newline="") as stream:
-            writer = csv.DictWriter(stream, fieldnames=list(asdict(trials[0])))
-            writer.writeheader()
-            writer.writerows(asdict(trial) for trial in trials)
-    plot_results(rows, destination / "comparison.png")
-    for row in rows:
-        print(
-            f"{row['dataset']:12} {row['method']:10} workers={row['workers']:2} "
-            f"median={row['median_seconds']:.6f}s "
-            f"speedup={row['speedup_vs_baseline']:.2f}x"
-        )
-    print(f"Результати: {destination.name}")
-    return destination
 
 
 def main(argv: list[str] | None = None) -> int:

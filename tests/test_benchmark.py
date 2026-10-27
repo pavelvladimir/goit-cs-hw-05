@@ -1,6 +1,8 @@
 import csv
 import json
+import shutil
 from pathlib import Path
+from typing import Any
 from unittest.mock import patch
 
 import pytest
@@ -117,7 +119,16 @@ def test_benchmark_rejects_corrupted_copy_and_cleans_workdir(tmp_path: Path) -> 
     assert list(tmp_path.iterdir()) == []
 
 
-@pytest.mark.parametrize("stage", ["generate_files", "benchmark_words"])
+@pytest.mark.parametrize(
+    "stage",
+    [
+        "generate_files",
+        "benchmark_words",
+        "write_json",
+        "csv.DictWriter.writerows",
+        "plot_results",
+    ],
+)
 @pytest.mark.parametrize("interrupt", [False, True])
 def test_failed_benchmark_removes_only_its_run(
     tmp_path: Path, stage: str, interrupt: bool
@@ -151,9 +162,17 @@ def test_benchmark_cleanup_error_does_not_mask_original_failure(
 ) -> None:
     """Log failed directory removal while preserving the benchmark exception."""
     error = RuntimeError("generation failed")
+    original_rmtree = shutil.rmtree
+
+    def deny_run_cleanup(path: str | Path, **kwargs: Any) -> None:
+        """Fail only run-directory removal, leaving inner cleanup operational."""
+        if Path(path).parent == tmp_path:
+            raise PermissionError("cleanup denied")
+        original_rmtree(path, **kwargs)
+
     with (
         patch("scripts.benchmark.generate_files", side_effect=error),
-        patch.object(Path, "rmdir", side_effect=PermissionError("cleanup denied")),
+        patch("scripts.benchmark.shutil.rmtree", side_effect=deny_run_cleanup),
         pytest.raises(RuntimeError) as raised,
     ):
         run_benchmark(Config(), tmp_path)

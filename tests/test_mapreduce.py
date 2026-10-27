@@ -1,6 +1,8 @@
+import socket
 import threading
 from collections import Counter
 from pathlib import Path
+from typing import Any
 from unittest.mock import patch
 from urllib.error import HTTPError
 
@@ -174,6 +176,41 @@ def test_truncated_http_response_is_rejected(http_url: str) -> None:
     """Reject a response shorter than its advertised Content-Length."""
     with pytest.raises(OSError, match="обірвалася"):
         download_text(f"{http_url}/truncated")
+
+
+@pytest.mark.parametrize("scheme", ["http", "https", "ftp"])
+@pytest.mark.parametrize("chained", [False, True])
+def test_http_fixture_blocks_external_redirect_before_connection(
+    http_url: str,
+    monkeypatch: pytest.MonkeyPatch,
+    scheme: str,
+    chained: bool,
+) -> None:
+    """Reject external redirects at any hop before reaching the transport."""
+    connected: list[str] = []
+    original_connect = socket.create_connection
+
+    def local_connect(
+        address: tuple[str, int], *args: Any, **kwargs: Any
+    ) -> socket.socket:
+        """Record local connections and fail before any external DNS or socket I/O."""
+        host, _ = address
+        if host not in {"127.0.0.1", "localhost"}:
+            raise RuntimeError("External transport was reached")
+        connected.append(host)
+        return original_connect(address, *args, **kwargs)
+
+    monkeypatch.setattr(socket, "create_connection", local_connect)
+    route = "chain" if chained else "external"
+    with (
+        patch.object(
+            socket, "gethostbyname", side_effect=RuntimeError("DNS was reached")
+        ) as hostname_lookup,
+        pytest.raises(AssertionError, match="local HTTP"),
+    ):
+        download_text(f"{http_url}/redirect-{route}-{scheme}")
+    hostname_lookup.assert_not_called()
+    assert connected == ["127.0.0.1"] * (2 if chained else 1)
 
 
 @pytest.mark.parametrize(

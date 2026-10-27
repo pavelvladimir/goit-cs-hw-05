@@ -10,7 +10,7 @@ from pathlib import Path
 from threading import Thread
 from typing import Any, cast
 from urllib.parse import urlsplit
-from urllib.request import Request, urlopen
+from urllib.request import BaseHandler, ProxyHandler, Request, build_opener
 
 import pytest
 
@@ -20,15 +20,33 @@ os.environ.setdefault(
 )
 
 
+class LocalRequestsOnly(BaseHandler):
+    """Validate every request, including redirects, before network I/O."""
+
+    def http_request(self, request: Request) -> Request:
+        """Allow only HTTP(S) requests to the local test server."""
+        parsed = urlsplit(request.full_url)
+        assert parsed.scheme in {"http", "https"} and parsed.hostname in {
+            "127.0.0.1",
+            "localhost",
+        }, "Only local HTTP requests are allowed in tests"
+        return request
+
+    https_request = http_request
+    # urllib also follows redirects to FTP; reject those before opening a socket.
+    ftp_request = http_request
+
+
 @pytest.fixture(autouse=True)
 def local_http_only(monkeypatch: pytest.MonkeyPatch) -> None:
     """Fail accidental public-HTTP requests before they leave the test process."""
     import mapreduce_words
 
+    opener = build_opener(ProxyHandler({}), LocalRequestsOnly())
+
     def open_local(request: Request, *, timeout: float) -> HTTPResponse:
-        """Allow initial HTTP requests only to the local test server."""
-        assert urlsplit(request.full_url).hostname in {"127.0.0.1", "localhost"}
-        return cast(HTTPResponse, urlopen(request, timeout=timeout))
+        """Apply the local-host check to the initial request and every redirect."""
+        return cast(HTTPResponse, opener.open(request, timeout=timeout))
 
     monkeypatch.setattr(mapreduce_words, "urlopen", open_local)
 
@@ -38,9 +56,18 @@ class TextHandler(BaseHTTPRequestHandler):
 
     def do_GET(self) -> None:
         """Return the fixture response selected by the request path."""
-        if self.path == "/redirect":
+        redirects = {
+            "/redirect": "/text",
+            "/redirect-external-http": "http://example.invalid/text",
+            "/redirect-external-https": "https://example.invalid/text",
+            "/redirect-external-ftp": "ftp://example.invalid/text",
+            "/redirect-chain-http": "/redirect-external-http",
+            "/redirect-chain-https": "/redirect-external-https",
+            "/redirect-chain-ftp": "/redirect-external-ftp",
+        }
+        if self.path in redirects:
             self.send_response(302)
-            self.send_header("Location", "/text")
+            self.send_header("Location", redirects[self.path])
             self.end_headers()
             return
         bodies = {

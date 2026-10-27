@@ -73,7 +73,7 @@ make check-rocky
 формат; схема CLI застосовується лише до двох demo-звітів. SHA-256 охоплюють код,
 тести, схему, приклади й конфігурацію, але не Markdown і збережені результати.
 
-Останній прогін: Rocky Linux 10.2 ARM64 у Docker Desktop, 175 тестів без пропусків.
+Останній прогін: Rocky Linux 10.2 ARM64 у Docker Desktop, 187 тестів без пропусків.
 Це перевірка контейнера з ядром LinuxKit; AMD64, окремий сервер Rocky,
 інші файлові системи та SELinux enforcing не перевірялися.
 [Докладні результати](verification.md#rocky-linux), [JSON запуску](rocky-results.json).
